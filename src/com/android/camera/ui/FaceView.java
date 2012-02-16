@@ -29,6 +29,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+/* ###QOALCOMM_CAMERA_ADDS_ON_START### */
+import android.graphics.Color;
+import android.graphics.Paint;
+/* ###QOALCOMM_CAMERA_ADDS_ON_END### */
+
 public class FaceView extends View implements FocusIndicator, Rotatable {
     private final String TAG = "FaceView";
     private final boolean LOGV = false;
@@ -48,12 +53,26 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
     private final Drawable mDrawableFocused;
     private final Drawable mDrawableFocusFailed;
 
+    /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
+    private Paint mPaint;
+    /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
+
     public FaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mDrawableFocusing = getResources().getDrawable(R.drawable.ic_focus_focusing);
         mDrawableFocused = getResources().getDrawable(R.drawable.ic_focus_face_focused);
         mDrawableFocusFailed = getResources().getDrawable(R.drawable.ic_focus_failed);
         mFaceIndicator = mDrawableFocusing;
+
+        /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
+        mPaint.setColor(Color.BLACK);//setColor(0xFFFFFF00);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(10);
+        /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
     }
 
     public void setFaces(Face[] faces) {
@@ -138,6 +157,60 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
                 mFaceIndicator.setBounds(Math.round(mRect.left), Math.round(mRect.top),
                         Math.round(mRect.right), Math.round(mRect.bottom));
                 mFaceIndicator.draw(canvas);
+
+                /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
+                float[] point = new float[4];
+                int delta_x = mFaces[i].rect.width() / 12;
+                int delta_y = mFaces[i].rect.height() / 12;
+                Log.e(TAG, "blink: " + mFaces[i].blinkDetected);
+                if (mFaces[i].leftEye != null) {
+                    point[0] = mFaces[i].leftEye.x;
+                    point[1] = mFaces[i].leftEye.y-delta_y/3;
+                    point[2] = mFaces[i].leftEye.x;
+                    point[3] = mFaces[i].leftEye.y+delta_y/3;
+                    mMatrix.mapPoints (point);
+                    if (mFaces[i].blinkDetected != 0) {
+                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                    } else {
+                        canvas.drawCircle(point[0], point[1], delta_x/3, mPaint);
+                    }
+                }
+                if (mFaces[i].rightEye != null) {
+                    point[0] = mFaces[i].rightEye.x;
+                    point[1] = mFaces[i].rightEye.y-delta_y/3;
+                    point[2] = mFaces[i].rightEye.x;
+                    point[3] = mFaces[i].rightEye.y+delta_y/3;
+                    mMatrix.mapPoints (point);
+                    if (mFaces[i].blinkDetected != 0) {
+                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                    } else {
+                        canvas.drawCircle(point[0], point[1], delta_x/3, mPaint);
+                    }
+                }
+
+                if (mFaces[i].mouth != null) {
+                    Log.e(TAG, "smile: " + mFaces[i].smileDegree + "," + mFaces[i].smileScore);
+
+                    if (mFaces[i].smileDegree < 30) {
+                        point[0] = mFaces[i].mouth.x;
+                        point[1] = mFaces[i].mouth.y-delta_y;
+                        point[2] = mFaces[i].mouth.x;
+                        point[3] = mFaces[i].mouth.y+delta_y;
+                        mMatrix.mapPoints (point);
+                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                    } else if (mFaces[i].smileDegree < 60) {
+                        mRect.set(mFaces[i].mouth.x-delta_x, mFaces[i].mouth.y-delta_y,
+                                  mFaces[i].mouth.x+delta_x, mFaces[i].mouth.y+delta_y);
+                        mMatrix.mapRect(mRect);
+                        canvas.drawArc(mRect, 0, 180, true, mPaint);
+                    } else {
+                        mRect.set(mFaces[i].mouth.x-delta_x, mFaces[i].mouth.y-delta_y,
+                                  mFaces[i].mouth.x+delta_x, mFaces[i].mouth.y+delta_y);
+                        mMatrix.mapRect(mRect);
+                        canvas.drawOval(mRect, mPaint);
+                    }
+                }
+                /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
             }
             canvas.restore();
         }
