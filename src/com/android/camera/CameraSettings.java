@@ -626,7 +626,7 @@ public class CameraSettings {
 
     //private int checkSupportedVideoQuality(List <Size> supported)
     private boolean checkSupportedVideoQuality(int width, int height){
-        List <Size> supported = mParameters.getSupportedPreviewSizes();
+        List <Size> supported = mParameters.getSupportedVideoSizes();
         int flag = 0;
         for (Size size : supported){
     //since we are having two profiles with same height, we are checking with height
