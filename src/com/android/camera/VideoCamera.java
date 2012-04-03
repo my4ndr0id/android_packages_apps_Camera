@@ -1760,13 +1760,12 @@ public class VideoCamera extends ActivityBase
                 switchToOtherMode(ModePicker.MODE_CAMERA);
             }
         });
-/*
         MenuHelper.addSwitchModeMenuItem(menu, ModePicker.MODE_PANORAMA, new Runnable() {
             public void run() {
                 switchToOtherMode(ModePicker.MODE_PANORAMA);
             }
         });
-*/
+
         if (mNumberOfCameras > 1) {
             menu.add(R.string.switch_camera_id)
                     .setOnMenuItemClickListener(new OnMenuItemClickListener() {
