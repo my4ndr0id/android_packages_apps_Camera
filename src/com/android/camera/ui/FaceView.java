@@ -21,17 +21,17 @@ import com.android.camera.Util;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera.Face;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-
-/* ###QOALCOMM_CAMERA_ADDS_ON_START### */
-import android.graphics.Color;
-import android.graphics.Paint;
+/* ###QOALCOMM_CAMERA_ADDS_ON_END### */
+import com.qualcomm.camera.QCFace;
 /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
 
 public class FaceView extends View implements FocusIndicator, Rotatable {
@@ -158,59 +158,88 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
                         Math.round(mRect.right), Math.round(mRect.bottom));
                 mFaceIndicator.draw(canvas);
 
-                /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
-                float[] point = new float[4];
-                int delta_x = mFaces[i].rect.width() / 12;
-                int delta_y = mFaces[i].rect.height() / 12;
-                Log.e(TAG, "blink: " + mFaces[i].blinkDetected);
-                if (mFaces[i].leftEye != null) {
-                    point[0] = mFaces[i].leftEye.x;
-                    point[1] = mFaces[i].leftEye.y-delta_y/3;
-                    point[2] = mFaces[i].leftEye.x;
-                    point[3] = mFaces[i].leftEye.y+delta_y/3;
-                    mMatrix.mapPoints (point);
-                    if (mFaces[i].blinkDetected != 0) {
-                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
-                    } else {
-                        canvas.drawCircle(point[0], point[1], delta_x/3, mPaint);
+                if (mFaces[i] instanceof QCFace) {
+                    QCFace face = (QCFace)mFaces[i];
+                    /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
+                    float[] point = new float[4];
+                    int delta_x = mFaces[i].rect.width() / 12;
+                    int delta_y = mFaces[i].rect.height() / 12;
+                    Log.e(TAG, "blink: " + face.getBlinkDetected());
+                    if (face.leftEye != null) {
+                        point[0] = face.leftEye.x;
+                        point[1] = face.leftEye.y-delta_y/3;
+                        point[2] = face.leftEye.x;
+                        point[3] = face.leftEye.y+delta_y/3;
+                        mMatrix.mapPoints (point);
+                        if (face.getBlinkDetected() == 1) {
+                            canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                        }
                     }
-                }
-                if (mFaces[i].rightEye != null) {
-                    point[0] = mFaces[i].rightEye.x;
-                    point[1] = mFaces[i].rightEye.y-delta_y/3;
-                    point[2] = mFaces[i].rightEye.x;
-                    point[3] = mFaces[i].rightEye.y+delta_y/3;
-                    mMatrix.mapPoints (point);
-                    if (mFaces[i].blinkDetected != 0) {
-                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
-                    } else {
-                        canvas.drawCircle(point[0], point[1], delta_x/3, mPaint);
+
+                    if (face.rightEye != null) {
+                        point[0] = face.rightEye.x;
+                        point[1] = face.rightEye.y-delta_y/3;
+                        point[2] = face.rightEye.x;
+                        point[3] = face.rightEye.y+delta_y/3;
+                        mMatrix.mapPoints (point);
+                        if (face.getBlinkDetected() == 1) {
+                            canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                        }
                     }
-                }
 
-                if (mFaces[i].mouth != null) {
-                    Log.e(TAG, "smile: " + mFaces[i].smileDegree + "," + mFaces[i].smileScore);
-
-                    if (mFaces[i].smileDegree < 30) {
-                        point[0] = mFaces[i].mouth.x;
-                        point[1] = mFaces[i].mouth.y-delta_y;
-                        point[2] = mFaces[i].mouth.x;
-                        point[3] = mFaces[i].mouth.y+delta_y;
+                    if (face.getLeftRightGazeDegree() != 0 || face.getTopBottomGazeDegree() != 0 ) {
+                        double length = Math.sqrt((face.leftEye.x - face.rightEye.x) *
+                            (face.leftEye.x - face.rightEye.x) +
+                            (face.leftEye.y - face.rightEye.y) *
+                            (face.leftEye.y - face.rightEye.y)) / 2.0;
+                        double nGazeYaw = -face.getLeftRightGazeDegree();
+                        double nGazePitch = -face.getTopBottomGazeDegree();
+                        float gazeRollX = (float)((-Math.sin(nGazeYaw/180.0*Math.PI) *
+                            Math.cos(-face.getRollDirection()/ 180.0*Math.PI)+
+                            Math.sin(nGazePitch/180.0*Math.PI)* Math.cos(nGazeYaw/180.0*Math.PI)
+                            * Math.sin(-face.getRollDirection()/180.0*Math.PI))
+                            * (-length) + 0.5);
+                        float gazeRollY = (float)((Math.sin(-nGazeYaw/180.0*Math.PI) *
+                            Math.sin(-face.getRollDirection()/180.0*Math.PI)-
+                            Math.sin(nGazePitch/180.0*Math.PI)* Math.cos(nGazeYaw/180.0*Math.PI)*
+                            Math.cos(-face.getRollDirection()/180.0*Math.PI))* (-length) + 0.5);
+                        point[0] = face.leftEye.x;
+                        point[1] = face.leftEye.y;
+                        point[2] = face.leftEye.x + gazeRollX;
+                        point[3] = face.leftEye.y + gazeRollY;
                         mMatrix.mapPoints (point);
                         canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
-                    } else if (mFaces[i].smileDegree < 60) {
-                        mRect.set(mFaces[i].mouth.x-delta_x, mFaces[i].mouth.y-delta_y,
-                                  mFaces[i].mouth.x+delta_x, mFaces[i].mouth.y+delta_y);
-                        mMatrix.mapRect(mRect);
-                        canvas.drawArc(mRect, 0, 180, true, mPaint);
-                    } else {
-                        mRect.set(mFaces[i].mouth.x-delta_x, mFaces[i].mouth.y-delta_y,
-                                  mFaces[i].mouth.x+delta_x, mFaces[i].mouth.y+delta_y);
-                        mMatrix.mapRect(mRect);
-                        canvas.drawOval(mRect, mPaint);
+                        point[0] = face.rightEye.x;
+                        point[1] = face.rightEye.y;
+                        point[2] = face.rightEye.x + gazeRollX;
+                        point[3] = face.rightEye.y + gazeRollY;
+                        mMatrix.mapPoints (point);
+                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
                     }
+
+                    if (face.mouth != null) {
+                        Log.e(TAG, "smile: " + face.getSmileDegree() + "," + face.getSmileScore());
+                        if (face.getSmileDegree() < 30) {
+                            point[0] = face.mouth.x;
+                            point[1] = face.mouth.y-delta_y;
+                            point[2] = face.mouth.x;
+                            point[3] = face.mouth.y+delta_y;
+                            mMatrix.mapPoints (point);
+                            canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                        } else if (face.getSmileDegree() < 60) {
+                            mRect.set(face.mouth.x-delta_x, face.mouth.y-delta_y,
+                                      face.mouth.x+delta_x, face.mouth.y+delta_y);
+                            mMatrix.mapRect(mRect);
+                            canvas.drawArc(mRect, 0, 180, true, mPaint);
+                        } else {
+                            mRect.set(face.mouth.x-delta_x, face.mouth.y-delta_y,
+                                      face.mouth.x+delta_x, face.mouth.y+delta_y);
+                            mMatrix.mapRect(mRect);
+                            canvas.drawOval(mRect, mPaint);
+                        }
+                    }
+                    /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
                 }
-                /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
             }
             canvas.restore();
         }
