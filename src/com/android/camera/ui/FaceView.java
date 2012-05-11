@@ -55,6 +55,9 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
 
     /* ###QOALCOMM_CAMERA_ADDS_ON_START### */
     private Paint mPaint;
+    private final int smile_threashold_no_smile = 30;
+    private final int smile_threashold_small_smile = 60;
+    private final int blink_threashold = 60;
     /* ###QOALCOMM_CAMERA_ADDS_ON_END### */
 
     public FaceView(Context context, AttributeSet attrs) {
@@ -68,7 +71,7 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
-        mPaint.setColor(Color.BLACK);//setColor(0xFFFFFF00);
+        mPaint.setColor(Color.WHITE);//setColor(0xFFFFFF00);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(10);
@@ -164,25 +167,25 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
                     float[] point = new float[4];
                     int delta_x = mFaces[i].rect.width() / 12;
                     int delta_y = mFaces[i].rect.height() / 12;
-                    Log.e(TAG, "blink: " + face.getBlinkDetected());
+                    Log.e(TAG, "blink: (" + face.getLeftEyeBlinkDegree()+ ", " + face.getRightEyeBlinkDegree() + ")");
                     if (face.leftEye != null) {
                         point[0] = face.leftEye.x;
-                        point[1] = face.leftEye.y-delta_y/3;
+                        point[1] = face.leftEye.y-delta_y/2;
                         point[2] = face.leftEye.x;
-                        point[3] = face.leftEye.y+delta_y/3;
+                        point[3] = face.leftEye.y+delta_y/2;
                         mMatrix.mapPoints (point);
-                        if (face.getBlinkDetected() == 1) {
+                        if (face.getLeftEyeBlinkDegree() >= blink_threashold) {
                             canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
                         }
                     }
 
                     if (face.rightEye != null) {
                         point[0] = face.rightEye.x;
-                        point[1] = face.rightEye.y-delta_y/3;
+                        point[1] = face.rightEye.y-delta_y/2;
                         point[2] = face.rightEye.x;
-                        point[3] = face.rightEye.y+delta_y/3;
+                        point[3] = face.rightEye.y+delta_y/2;
                         mMatrix.mapPoints (point);
-                        if (face.getBlinkDetected() == 1) {
+                        if (face.getRightEyeBlinkDegree() >= blink_threashold) {
                             canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
                         }
                     }
@@ -203,30 +206,36 @@ public class FaceView extends View implements FocusIndicator, Rotatable {
                             Math.sin(-face.getRollDirection()/180.0*Math.PI)-
                             Math.sin(nGazePitch/180.0*Math.PI)* Math.cos(nGazeYaw/180.0*Math.PI)*
                             Math.cos(-face.getRollDirection()/180.0*Math.PI))* (-length) + 0.5);
-                        point[0] = face.leftEye.x;
-                        point[1] = face.leftEye.y;
-                        point[2] = face.leftEye.x + gazeRollX;
-                        point[3] = face.leftEye.y + gazeRollY;
-                        mMatrix.mapPoints (point);
-                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
-                        point[0] = face.rightEye.x;
-                        point[1] = face.rightEye.y;
-                        point[2] = face.rightEye.x + gazeRollX;
-                        point[3] = face.rightEye.y + gazeRollY;
-                        mMatrix.mapPoints (point);
-                        canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+
+                        if (face.getLeftEyeBlinkDegree() < blink_threashold) {
+                            point[0] = face.leftEye.x;
+                            point[1] = face.leftEye.y;
+                            point[2] = face.leftEye.x + gazeRollX;
+                            point[3] = face.leftEye.y + gazeRollY;
+                            mMatrix.mapPoints (point);
+                            canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                        }
+
+                        if (face.getRightEyeBlinkDegree() < blink_threashold) {
+                            point[0] = face.rightEye.x;
+                            point[1] = face.rightEye.y;
+                            point[2] = face.rightEye.x + gazeRollX;
+                            point[3] = face.rightEye.y + gazeRollY;
+                            mMatrix.mapPoints (point);
+                            canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
+                        }
                     }
 
                     if (face.mouth != null) {
                         Log.e(TAG, "smile: " + face.getSmileDegree() + "," + face.getSmileScore());
-                        if (face.getSmileDegree() < 30) {
+                        if (face.getSmileDegree() < smile_threashold_no_smile) {
                             point[0] = face.mouth.x;
                             point[1] = face.mouth.y-delta_y;
                             point[2] = face.mouth.x;
                             point[3] = face.mouth.y+delta_y;
                             mMatrix.mapPoints (point);
                             canvas.drawLine(point[0], point[1], point[2], point[3], mPaint);
-                        } else if (face.getSmileDegree() < 60) {
+                        } else if (face.getSmileDegree() < smile_threashold_small_smile) {
                             mRect.set(face.mouth.x-delta_x, face.mouth.y-delta_y,
                                       face.mouth.x+delta_x, face.mouth.y+delta_y);
                             mMatrix.mapRect(mRect);
