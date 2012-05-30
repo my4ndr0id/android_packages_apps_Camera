@@ -590,7 +590,7 @@ public class VideoCamera extends ActivityBase
         mRecordingTimerOverlayHandler.setRecordingTimerSurfaceHolder(recordingTimerHolder);
         recordingTimerHolder.addCallback(mRecordingTimerOverlayHandler);
         mRecordingTimerView.setZOrderMediaOverlay(true);
-        updateRecordingTime();
+        mRecordingTimerView.setVisibility(View.GONE);
 
         if (mIsVideoCaptureIntent) {
             mReviewDoneButton = (Rotatable) findViewById(R.id.btn_done);
@@ -1969,6 +1969,7 @@ public class VideoCamera extends ActivityBase
         mMediaRecorderRecording = true;
         mRecordingStartTime = SystemClock.uptimeMillis();
         showRecordingUI(true);
+        mRecordingTimerView.postInvalidate();
 
         updateRecordingTime();
         keepScreenOn();
@@ -2238,15 +2239,15 @@ public class VideoCamera extends ActivityBase
                 if (oldTimerText.length() > 0) {
                     // There is a saved old timer text value.
                     // Lets paint it in transparent.
-                    mRecordingTimeUnPainter.setStyle(Paint.Style.FILL);
-                    recordingTimerCanvas.drawText(oldTimerText, 10, 80, mRecordingTimeUnPainter);
-                    recordingTimerCanvas.drawRect(0, 0, 300, 300, mRecordingTimeUnPainter);
+                    //mRecordingTimeUnPainter.setStyle(Paint.Style.FILL);
+                    //recordingTimerCanvas.drawText(oldTimerText, 10, 80, mRecordingTimeUnPainter);
+                    recordingTimerCanvas.drawRect(0, 0, 150, 150, mRecordingTimeUnPainter);
+                    mRecordingTimerView.postInvalidate();
                     Log.v(TAG, "Undrawing text.");
                 }
 
-                mRecordingTimerView.postInvalidate();
                 mRecordingTimePainter.setColor(textColor);
-                mRecordingTimePainter.setXfermode(null);
+                //mRecordingTimePainter.setXfermode(null);
                 Bitmap mybit = BitmapFactory.decodeResource(getResources(), R.drawable.ic_recording_indicator);
                 recordingTimerCanvas.drawBitmap(mybit, 10, 0, null); 
                 recordingTimerCanvas.drawText(text, 10, 80, mRecordingTimePainter);
