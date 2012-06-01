@@ -50,7 +50,7 @@ public class Thumbnail {
     private Uri mUri;
     private Bitmap mBitmap;
     // whether this thumbnail is read from file
-    private boolean mFromFile = false;
+    private boolean mFromFile = true;
 
     // Camera, VideoCamera, and Panorama share the same thumbnail. Use sLock
     // to serialize the access.
