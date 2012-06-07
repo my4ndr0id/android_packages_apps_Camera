@@ -1096,26 +1096,35 @@ public class VideoCamera extends ActivityBase
                 it.remove();
             }
         }
-        Size optimalSize = Util.getOptimalPreviewSize(this, sizes,
-            (double) mProfile.videoFrameWidth / mProfile.videoFrameHeight);
-        // If found optimal resolution is larger than the requested,
-        // set desired resolution to the requested resolution, if it is supported
-        if(optimalSize.width > mProfile.videoFrameWidth || optimalSize.height > mProfile.videoFrameHeight){
-                Iterator tit = sizes.iterator();
-                while (tit.hasNext()) {
-                    Size size = (Size) tit.next();
-                    if (size.width == mProfile.videoFrameWidth &&  size.height == mProfile.videoFrameHeight) {
-                        mDesiredPreviewWidth = mProfile.videoFrameWidth;
-                        mDesiredPreviewHeight = mProfile.videoFrameHeight;
-                        break;
-                    }
-                }
+
+        if(!(mParameters.isSingleOutputEnabled())){
+          Size optimalSize = Util.getOptimalPreviewSize(this, sizes,
+              (double) mProfile.videoFrameWidth / mProfile.videoFrameHeight);
+          // If found optimal resolution is larger than the requested,
+          // set desired resolution to the requested resolution, if it is supported
+          if(optimalSize.width > mProfile.videoFrameWidth || optimalSize.height > mProfile.videoFrameHeight){
+                  Iterator tit = sizes.iterator();
+                  while (tit.hasNext()) {
+                      Size size = (Size) tit.next();
+                      if (size.width == mProfile.videoFrameWidth &&  size.height == mProfile.videoFrameHeight) {
+                          mDesiredPreviewWidth = mProfile.videoFrameWidth;
+                          mDesiredPreviewHeight = mProfile.videoFrameHeight;
+                          break;
+                      }
+                  }
+          } else {
+           // if found optimal resolution is not greater than
+           // requested resolution , use it.
+               mDesiredPreviewWidth = optimalSize.width;
+               mDesiredPreviewHeight = optimalSize.height;
+          }
         } else {
-         // if found optimal resolution is not greater than
-         // requested resolution , use it.
-             mDesiredPreviewWidth = optimalSize.width;
-             mDesiredPreviewHeight = optimalSize.height;
+            mDesiredPreviewWidth = mProfile.videoFrameWidth;
+            mDesiredPreviewHeight = mProfile.videoFrameHeight;
+
         }
+
+
         Log.v(TAG, "mDesiredPreviewWidth=" + mDesiredPreviewWidth +
                 ". mDesiredPreviewHeight=" + mDesiredPreviewHeight);
     }
