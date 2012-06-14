@@ -1537,14 +1537,17 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
 
     private void overrideCameraSettings(final String flashMode,
             final String whiteBalance, final String focusMode,
-            final String exposureMode, final String touchMode) {
+            final String exposureMode, final String touchMode,
+            final String autoExposure) {
         if (mIndicatorControlContainer != null) {
             mIndicatorControlContainer.overrideSettings(
                     CameraSettings.KEY_FLASH_MODE, flashMode,
                     CameraSettings.KEY_WHITE_BALANCE, whiteBalance,
                     CameraSettings.KEY_FOCUS_MODE, focusMode,
                     CameraSettings.KEY_EXPOSURE, exposureMode,
-                    CameraSettings.KEY_TOUCH_AF_AEC, touchMode);
+                    CameraSettings.KEY_TOUCH_AF_AEC, touchMode,
+                    CameraSettings.KEY_AUTOEXPOSURE, autoExposure
+                    );
         }
     }
 
@@ -1555,9 +1558,9 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
             overrideCameraSettings(mParameters.getFlashMode(),
                     mParameters.getWhiteBalance(), mParameters.getFocusMode(),
                     Integer.toString(mParameters.getExposureCompensation()),
-                    mParameters.getTouchAfAec());
+                    mParameters.getTouchAfAec(), mParameters.getAutoExposure());
         } else {
-            overrideCameraSettings(null, null, null, null, null);
+            overrideCameraSettings(null, null, null, null, null,null);
         }
     }
 
